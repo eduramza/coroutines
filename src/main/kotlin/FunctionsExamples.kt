@@ -15,7 +15,7 @@ import java.util.concurrent.Executors
  * delay = bloqueia a main thread e garante a sobrevivencia de um certo metodo
  */
 fun main(args: Array<String>){
-    exampleWithContext()
+//    printlineDelayed("wrong call!")
 }
 
 suspend fun printlineDelayed(message : String){
@@ -28,13 +28,14 @@ suspend fun calculate(num: Int): Int{
     return num * 10
 }
 
+//runblocking
 fun exampleBlocking() = runBlocking {
     println("one")
     printlineDelayed("two")
     println("three")
 }
 
-//rodar uma outra thread sem bloquar a thread main
+//rodar uma outra thread com Dispatchers.Default
 fun exampleBlockingDispatcher(){
     runBlocking(Dispatchers.Default) {
         println("one - from thread ${Thread.currentThread().name}")
@@ -52,7 +53,7 @@ fun exampleLaunchGlobal() = runBlocking {
         printlineDelayed("two - from thread ${Thread.currentThread().name}")
     }
     println("three - from thread ${Thread.currentThread().name}")
-    delay(1000) //se remover o delay o código é lido corridamente, ou seja, não é esperado o delay do scope
+    //delay(1000) //se remover o delay o código é lido corridamente, ou seja, não é esperado o delay do scope
 }
 
 fun exampleLaunchGlobalWaiting() = runBlocking {
@@ -77,12 +78,18 @@ fun exampleLaunchCoroutineScope() = runBlocking {
 fun customDispatcher() = runBlocking {
     println("one - from thread ${Thread.currentThread().name}")
 
-    val customDispatcher = Executors.newFixedThreadPool(2).asCoroutineDispatcher()
+    val customDispatcher = Executors.newFixedThreadPool(3).asCoroutineDispatcher()
 
-    launch(customDispatcher) {
+    runBlocking (customDispatcher) {
+        async {  printlineDelayed("four - from thread ${Thread.currentThread().name}") }
+        async {  printlineDelayed("six - from thread ${Thread.currentThread().name}") }
+        async {  printlineDelayed("seven - from thread ${Thread.currentThread().name}") }
         printlineDelayed("two - from thread ${Thread.currentThread().name}")
+        printlineDelayed("three - from thread ${Thread.currentThread().name}")
+
     }
-    println("three - from thread ${Thread.currentThread().name}")
+
+    println("five - from thread ${Thread.currentThread().name}")
 
     //customDispatchers devem ser desligadas manualmente
     (customDispatcher.executor as ExecutorService).shutdown()
